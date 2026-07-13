@@ -19,6 +19,7 @@ public class Ticket {
     @Column(nullable = false)
     private String description;
 
+    @Column(name = "ticket_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TicketStatus status =  TicketStatus.OPEN;
 
