@@ -5,8 +5,11 @@ import com.example.TicketSupport.dto.TicketResponse;
 import com.example.TicketSupport.entity.Ticket;
 import com.example.TicketSupport.enums.TicketStatus;
 import com.example.TicketSupport.repository.TicketRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 
 @Service
 public class TicketService {
@@ -19,6 +22,12 @@ public class TicketService {
         Ticket ticket = new Ticket();
         mapToEntity(request, ticket);
         return toResponse(ticketRepository.save(ticket));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TicketResponse> getAll(Pageable pageable) {
+        Page<Ticket> tickets = ticketRepository.findAll(pageable);
+        return tickets.map(this::toResponse);
     }
 
     private void mapToEntity(CreateTicketRequest request, Ticket ticket) {
