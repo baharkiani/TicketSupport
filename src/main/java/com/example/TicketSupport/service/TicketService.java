@@ -2,8 +2,10 @@ package com.example.TicketSupport.service;
 
 import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
+import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
 import com.example.TicketSupport.entity.Ticket;
 import com.example.TicketSupport.enums.TicketStatus;
+import com.example.TicketSupport.exception.TicketNotFoundException;
 import com.example.TicketSupport.repository.TicketRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -14,9 +16,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class TicketService {
     private final TicketRepository ticketRepository;
+
     public TicketService(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
     }
+
     @Transactional
     public TicketResponse create(CreateTicketRequest request) {
         Ticket ticket = new Ticket();
@@ -32,8 +36,16 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public TicketResponse getOne(Long id) {
-        Ticket ticket = ticketRepository.getOne(id);
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
         return toResponse(ticket);
+    }
+
+    @Transactional
+    public TicketResponse update(Long id, UpdateTicketStatusRequest request) {
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
+        ticket.setStatus(request.getStatus());
+        return toResponse(ticketRepository.save(ticket));
+
     }
 
     private void mapToEntity(CreateTicketRequest request, Ticket ticket) {
