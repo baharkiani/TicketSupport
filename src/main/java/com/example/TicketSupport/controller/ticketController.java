@@ -4,13 +4,13 @@ import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
 import com.example.TicketSupport.service.TicketService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -24,6 +24,11 @@ public class ticketController {
     @PostMapping
     public ResponseEntity<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest createTicketRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(createTicketRequest));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<TicketResponse>> getAll(Pageable pageable){
+        return ResponseEntity.ok(ticketService.getAll(pageable));
     }
 
 
