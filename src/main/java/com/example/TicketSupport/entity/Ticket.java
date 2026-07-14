@@ -83,4 +83,12 @@ public class Ticket {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public TicketStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TicketStatus status) {
+        this.status = status;
+    }
 }
