@@ -31,6 +31,12 @@ public class ticketController {
         return ResponseEntity.ok(ticketService.getAll(pageable));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TicketResponse> getOne(@PathVariable Long id){
+        return ResponseEntity.ok(ticketService.getOne(id));
+    }
+
+
 
 
 }
