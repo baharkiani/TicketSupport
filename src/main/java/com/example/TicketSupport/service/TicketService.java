@@ -1,5 +1,6 @@
 package com.example.TicketSupport.service;
 
+import com.example.TicketSupport.annotation.LogExecutionTime;
 import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
 import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
@@ -35,6 +36,7 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
+    @LogExecutionTime
     public TicketResponse getOne(Long id) {
         Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
         return toResponse(ticket);
