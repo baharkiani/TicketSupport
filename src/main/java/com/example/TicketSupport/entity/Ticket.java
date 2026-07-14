@@ -23,7 +23,7 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     private TicketStatus status =  TicketStatus.OPEN;
 
-    @Column(name = " created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
