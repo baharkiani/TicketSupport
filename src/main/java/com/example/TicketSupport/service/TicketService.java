@@ -30,6 +30,12 @@ public class TicketService {
         return tickets.map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public TicketResponse getOne(Long id) {
+        Ticket ticket = ticketRepository.getOne(id);
+        return toResponse(ticket);
+    }
+
     private void mapToEntity(CreateTicketRequest request, Ticket ticket) {
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
@@ -42,6 +48,8 @@ public class TicketService {
         ticketResponse.setTitle(ticket.getTitle());
         ticketResponse.setDescription(ticket.getDescription());
         ticketResponse.setStatus(ticket.getStatus());
+        ticketResponse.setCreatedAt(ticket.getCreatedAt());
+        ticketResponse.setUpdatedAt(ticket.getUpdatedAt());
         return ticketResponse;
     }
 }
