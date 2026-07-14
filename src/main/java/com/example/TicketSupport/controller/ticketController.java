@@ -2,6 +2,7 @@ package com.example.TicketSupport.controller;
 
 import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
+import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
 import com.example.TicketSupport.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,11 @@ public class ticketController {
     @GetMapping("/{id}")
     public ResponseEntity<TicketResponse> getOne(@PathVariable Long id){
         return ResponseEntity.ok(ticketService.getOne(id));
+    }
+
+    @PatchMapping("/{id}/update")
+    public ResponseEntity<TicketResponse> update(@PathVariable Long id, UpdateTicketStatusRequest reaquest){
+        return ResponseEntity.ok(ticketService.update(id, reaquest));
     }
 
 
