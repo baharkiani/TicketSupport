@@ -5,9 +5,10 @@ import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
 import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
 import com.example.TicketSupport.entity.Ticket;
-import com.example.TicketSupport.enums.TicketStatus;
 import com.example.TicketSupport.exception.TicketNotFoundException;
 import com.example.TicketSupport.repository.TicketRepository;
+import jakarta.validation.Valid;
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,8 +16,8 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class TicketService {
-    private final TicketRepository ticketRepository;
+public class TicketService  {
+    public final TicketRepository ticketRepository;
 
     public TicketService(TicketRepository ticketRepository) {
         this.ticketRepository = ticketRepository;
@@ -25,12 +26,13 @@ public class TicketService {
     @Transactional
     public TicketResponse create(CreateTicketRequest request) {
         Ticket ticket = new Ticket();
-        mapToEntity(request, ticket);
+        request.mapToEntity(ticket);
         return toResponse(ticketRepository.save(ticket));
     }
 
     @Transactional(readOnly = true)
     public Page<TicketResponse> getAll(Pageable pageable) {
+
         Page<Ticket> tickets = ticketRepository.findAll(pageable);
         return tickets.map(this::toResponse);
     }
@@ -50,11 +52,7 @@ public class TicketService {
 
     }
 
-    private void mapToEntity(CreateTicketRequest request, Ticket ticket) {
-        ticket.setTitle(request.getTitle());
-        ticket.setDescription(request.getDescription());
-        ticket.setStatus(TicketStatus.OPEN);
-    }
+
 
     private TicketResponse toResponse(Ticket ticket) {
         TicketResponse ticketResponse = new TicketResponse();
@@ -66,4 +64,6 @@ public class TicketService {
         ticketResponse.setUpdatedAt(ticket.getUpdatedAt());
         return ticketResponse;
     }
+
+
 }

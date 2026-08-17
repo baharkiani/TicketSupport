@@ -38,7 +38,7 @@ public class ticketController {
     }
 
     @PatchMapping("/{id}/update")
-    public ResponseEntity<TicketResponse> update(@PathVariable Long id, UpdateTicketStatusRequest reaquest){
+    public ResponseEntity<TicketResponse> update(@PathVariable Long id,@RequestBody UpdateTicketStatusRequest reaquest){
         return ResponseEntity.ok(ticketService.update(id, reaquest));
     }
 

@@ -1,5 +1,7 @@
 package com.example.TicketSupport.dto;
 
+import com.example.TicketSupport.entity.Ticket;
+import com.example.TicketSupport.enums.TicketStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -11,6 +13,8 @@ public class CreateTicketRequest {
     @NotBlank(message = "Description must not be blank")
     @Size(min = 2, max = 1000, message = "Description must be between 2 and 1000 characters")
     private String description;
+
+
 
     public String getTitle() {
         return title;
@@ -26,5 +30,11 @@ public class CreateTicketRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void mapToEntity(Ticket ticket) {
+        ticket.setTitle(getTitle());
+        ticket.setDescription(getDescription());
+        ticket.setStatus(TicketStatus.OPEN);
     }
 }
