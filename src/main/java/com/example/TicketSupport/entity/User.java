@@ -26,7 +26,7 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Ticket> tickets;
 
-    public User(){git
+    public User(){
 
     }
 
