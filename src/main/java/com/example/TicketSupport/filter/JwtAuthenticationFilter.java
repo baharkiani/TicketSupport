@@ -61,11 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // آیا endpoint نیاز به JWT دارد؟
         boolean jwtRequired =
                 handlerMethod.hasMethodAnnotation(JwtRequired.class);
 
-        // اگر endpoint عمومی است
         if (!jwtRequired) {
             filterChain.doFilter(request, response);
             return;
