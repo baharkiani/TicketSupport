@@ -35,7 +35,7 @@ public class AuthService {
         return toResponse(userRepository.save(user));
     }
 
-
+    @Transactional
     public String login(LoginRequest request){
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UserOrPasswordNotFound("username or password not correct"));
