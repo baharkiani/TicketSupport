@@ -1,5 +1,6 @@
 package com.example.TicketSupport.controller;
 
+import com.example.TicketSupport.annotation.JwtRequired;
 import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
 import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
@@ -22,6 +23,7 @@ public class ticketController {
         this.ticketService = ticketService;
     }
 
+    @JwtRequired
     @PostMapping
     public ResponseEntity<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest createTicketRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(createTicketRequest));

@@ -1,5 +1,6 @@
 package com.example.TicketSupport.filter;
 
+import com.example.TicketSupport.annotation.JwtRequired;
 import com.example.TicketSupport.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.io.IOException;
 
@@ -19,13 +22,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final RequestMappingHandlerMapping handlerMapping;
     private final UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
+            RequestMappingHandlerMapping handlerMapping,
             UserDetailsService userDetailsService
     ) {
         this.jwtService = jwtService;
+        this.handlerMapping = handlerMapping;
         this.userDetailsService = userDetailsService;
     }
 
@@ -35,10 +41,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
+        HandlerMethod handlerMethod;
+
+        try {
+            Object handler = handlerMapping
+                    .getHandler(request)
+                    .getHandler();
+
+            if (!(handler instanceof HandlerMethod)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            handlerMethod = (HandlerMethod) handler;
+
+        } catch (Exception e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // آیا endpoint نیاز به JWT دارد؟
+        boolean jwtRequired =
+                handlerMethod.hasMethodAnnotation(JwtRequired.class);
+
+        // اگر endpoint عمومی است
+        if (!jwtRequired) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+
         String authHeader = request.getHeader("Authorization");
 
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
@@ -46,39 +84,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
 
-            if (jwtService.validateJwt(jwt)) {
 
-                String username = jwtService.extractUsername(jwt);
-
-                if (username != null &&
-                        SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                    UserDetails userDetails =
-                            userDetailsService.loadUserByUsername(username);
-
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authenticationToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authenticationToken);
-                }
+            if (!jwtService.validateJwt(jwt)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
 
+            String username = jwtService.extractUsername(jwt);
+
+            if (username == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(username);
+
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authenticationToken.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authenticationToken);
+            }
+
+            filterChain.doFilter(request, response);
+
         } catch (Exception e) {
-            e.printStackTrace();
+
             SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
-
-        filterChain.doFilter(request, response);
-
     }
 }
