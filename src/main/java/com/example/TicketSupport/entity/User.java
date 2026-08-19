@@ -26,8 +26,10 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Ticket> tickets;
 
-    public User(){
+    @OneToMany(mappedBy = "user")
+    private List<RefreshToken> refreshTokens;
 
+    public User(){
     }
 
     public Long getId() {
