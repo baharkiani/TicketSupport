@@ -1,6 +1,8 @@
 package com.example.TicketSupport.filter;
 
 import com.example.TicketSupport.annotation.JwtRequired;
+import com.example.TicketSupport.entity.User;
+import com.example.TicketSupport.repository.UserRepository;
 import com.example.TicketSupport.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,16 +25,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final RequestMappingHandlerMapping handlerMapping;
-    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
             RequestMappingHandlerMapping handlerMapping,
-            UserDetailsService userDetailsService
+            UserRepository userRepository
     ) {
         this.jwtService = jwtService;
         this.handlerMapping = handlerMapping;
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -41,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-
+        //implement jwtFilter for specific method
         HandlerMethod handlerMethod;
 
         try {
@@ -69,7 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-
+        //jwtFilter Config
         String authHeader = request.getHeader("Authorization");
 
 
@@ -83,38 +85,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
 
 
-            if (!jwtService.validateJwt(jwt)) {
+            if (!jwtService.validateAccessToken(jwt)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
 
-            String username = jwtService.extractUsername(jwt);
+            Long userId = jwtService.extractUserId(jwt);
 
-            if (username == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails =
+                    org.springframework.security.core.userdetails.User
+                            .withUsername(user.getUsername())
+                            .password(user.getPassword())
+                            .roles(user.getRole().name())
+                            .build();
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                authenticationToken.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authenticationToken);
-            }
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authentication);
 
             filterChain.doFilter(request, response);
 
