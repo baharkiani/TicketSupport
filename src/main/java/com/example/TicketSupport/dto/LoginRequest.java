@@ -25,8 +25,7 @@ public class LoginRequest {
         this.password = password;
     }
 
-    public User mapToEntity(User user) {
-        user.setUsername(username);
-        return user;
-    }
+
+
+
 }
