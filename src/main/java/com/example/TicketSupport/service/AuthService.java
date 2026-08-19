@@ -1,11 +1,14 @@
 package com.example.TicketSupport.service;
 
 import com.example.TicketSupport.dto.LoginRequest;
+import com.example.TicketSupport.dto.LoginResponse;
 import com.example.TicketSupport.dto.RegisterRequest;
 import com.example.TicketSupport.dto.UserResponse;
+import com.example.TicketSupport.entity.RefreshToken;
 import com.example.TicketSupport.entity.User;
 import com.example.TicketSupport.exception.UserOrPasswordNotFound;
 import com.example.TicketSupport.exception.UsernameAlreadyExistsException;
+import com.example.TicketSupport.repository.RefreshTokenRepository;
 import com.example.TicketSupport.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,16 +19,23 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService, RefreshTokenService refreshTokenService, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
 
     @Transactional
-    public UserResponse register(RegisterRequest request){
+    public UserResponse register(RegisterRequest request) {
         User user = new User();
         request.mapToEntity(user);
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
@@ -36,22 +46,52 @@ public class AuthService {
     }
 
     @Transactional
-    public String login(LoginRequest request){
+    public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UserOrPasswordNotFound("username or password not correct"));
 
-        if(!verifyPassword(request.getPassword(), user.getPassword())) {
+        if (!verifyPassword(request.getPassword(), user.getPassword())) {
             throw new UserOrPasswordNotFound("username or password not correct");
         }
 
-        return jwtService.generateJwt(user.getUsername(),user.getRole().name());
+        String accessToken = jwtService.generateAccessToken(user.getId().toString(), user.getRole().toString());
+        String refreshToken = refreshTokenService.generateRefreshToken(user.getId().toString(), user);
+
+
+        LoginResponse response = new LoginResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+        return response;
     }
 
-    private boolean verifyPassword(String requestPassword, String userPassword){
+    @Transactional
+    public String refreshAccessToken(String token) {
+
+        RefreshToken refreshToken =
+                refreshTokenRepository.findByToken(token)
+                        .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+
+        if (refreshTokenService.isExpired(refreshToken)) {
+            throw new RuntimeException("token expired");
+        }
+
+        if (!refreshTokenService.isValidToken(token)) {
+            throw new RuntimeException("token is invalid");
+        }
+        User user = refreshToken.getUser();
+
+        return "new accessToken:  " + jwtService.generateAccessToken(
+                user.getId().toString(),
+                user.getRole().toString());
+    }
+
+
+    private boolean verifyPassword(String requestPassword, String userPassword) {
         return passwordEncoder.matches(requestPassword, userPassword);
     }
 
-    private UserResponse toResponse(User user){
+
+    private UserResponse toResponse(User user) {
         UserResponse registerResponse = new UserResponse();
         registerResponse.setUsername(user.getUsername());
         registerResponse.setRole(user.getRole());
