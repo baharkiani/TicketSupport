@@ -1,8 +1,7 @@
 package com.example.TicketSupport.controller;
 
-import com.example.TicketSupport.dto.LoginRequest;
-import com.example.TicketSupport.dto.RegisterRequest;
-import com.example.TicketSupport.dto.UserResponse;
+import com.example.TicketSupport.dto.*;
+import com.example.TicketSupport.entity.RefreshToken;
 import com.example.TicketSupport.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,7 +26,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request){
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refresh(@Valid @RequestBody RefreshTokenRequest request){
+        return ResponseEntity.ok(authService.refreshAccessToken(request.getRefreshToken()));
+    }
+
 }
