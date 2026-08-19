@@ -21,18 +21,20 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateJwt(String username, String role) {
+    public String generateAccessToken(String id, String role) {
 
         return Jwts.builder()
-                .subject(username)
+                .subject(id)
                 .claim("role", role)
+                .claim("type", "access")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000))
                 .signWith(generateKey())
                 .compact();
     }
 
-    public String extractUsername(String token) {
+
+    public Long extractUserId(String token) {
 
         Claims claims = Jwts.parser()
                 .verifyWith(generateKey())
@@ -40,10 +42,10 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.getSubject();
+        return Long.valueOf(claims.getSubject());
     }
 
-    public boolean validateJwt(String token) {
+    public boolean validateAccessToken(String token) {
 
         try {
 
