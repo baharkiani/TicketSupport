@@ -1,11 +1,12 @@
 package com.example.TicketSupport.dto;
 
 
-import com.example.TicketSupport.enums.Role;
+import java.util.List;
+
 
 public class UserResponse {
     private String username;
-    private Role role;
+    private List<String> role;
 
 
     public String getUsername() {
@@ -16,11 +17,11 @@ public class UserResponse {
         this.username = username;
     }
 
-    public Role getRole() {
+    public List<String> getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(List<String> role) {
         this.role = role;
     }
 }
