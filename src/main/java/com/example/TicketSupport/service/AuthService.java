@@ -106,6 +106,12 @@ public class AuthService {
                 user.getRole().toString());
     }
 
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getAll(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(this::toResponse);
+    }
+
 
     private boolean verifyPassword(String requestPassword, String userPassword) {
         return passwordEncoder.matches(requestPassword, userPassword);
