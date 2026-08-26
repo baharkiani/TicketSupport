@@ -41,6 +41,27 @@ public class AuthService {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new UsernameAlreadyExistsException(user.getUsername());
         }
+
+        Set<Role> roles;
+
+        if (request.getRoles() == null || request.getRoles().isEmpty()) {
+
+            Role userRole = roleRepository.findByRoleName("USER")
+                    .orElseThrow(() -> new RuntimeException("USER role not found"));
+
+            roles = Set.of(userRole);
+
+        } else {
+
+            roles = request.getRoles().stream()
+                    .map(roleName -> roleRepository.findByRoleName(String.valueOf(roleName))
+                            .orElseThrow(() ->
+                                    new RuntimeException("Role not found: " + roleName)
+                            ))
+                    .collect(Collectors.toSet());
+        }
+
+        user.setRoles(roles);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return toResponse(userRepository.save(user));
     }
