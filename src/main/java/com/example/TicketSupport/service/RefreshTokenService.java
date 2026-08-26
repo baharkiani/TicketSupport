@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HexFormat;
 
 @Service
 public class RefreshTokenService {
@@ -46,13 +48,14 @@ public class RefreshTokenService {
 
         RefreshToken refreshToken = new RefreshToken();
 
-        refreshToken.setToken(token);
+        refreshToken.setToken(hashToken(token));
         refreshToken.setUser(user);
         refreshToken.setIssuedAt(LocalDateTime.now());
         refreshToken.setExpirationAt(
                 LocalDateTime.now().plusDays(7)
         );
 
+        System.out.println(hashToken(token));
         refreshTokenRepository.save(refreshToken);
 
         return token;
@@ -76,6 +79,21 @@ public class RefreshTokenService {
                     && claims.getExpiration().after(new Date());
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    public String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            byte[] hash = digest.digest(
+                    token.getBytes(StandardCharsets.UTF_8)
+            );
+
+            return HexFormat.of().formatHex(hash);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
