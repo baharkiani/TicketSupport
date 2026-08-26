@@ -5,33 +5,35 @@ import com.example.TicketSupport.dto.LoginResponse;
 import com.example.TicketSupport.dto.RegisterRequest;
 import com.example.TicketSupport.dto.UserResponse;
 import com.example.TicketSupport.entity.RefreshToken;
+import com.example.TicketSupport.entity.Role;
 import com.example.TicketSupport.entity.User;
 import com.example.TicketSupport.exception.UserOrPasswordNotFound;
 import com.example.TicketSupport.exception.UsernameAlreadyExistsException;
 import com.example.TicketSupport.repository.RefreshTokenRepository;
+import com.example.TicketSupport.repository.RoleRepository;
 import com.example.TicketSupport.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RoleRepository roleRepository;
 
-    public AuthService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService, RefreshTokenService refreshTokenService, RefreshTokenRepository refreshTokenRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.refreshTokenService = refreshTokenService;
-        this.refreshTokenRepository = refreshTokenRepository;
-    }
+
 
 
     @Transactional
@@ -75,7 +77,7 @@ public class AuthService {
             throw new UserOrPasswordNotFound("username or password not correct");
         }
 
-        String accessToken = jwtService.generateAccessToken(user.getId().toString(), user.getRole().toString());
+        String accessToken = jwtService.generateAccessToken(user.getId().toString(), user.getRoles().toString(), user.getUsername().toString());
         String refreshToken = refreshTokenService.generateRefreshToken(user.getId().toString(), user);
 
 
@@ -89,7 +91,7 @@ public class AuthService {
     public String refreshAccessToken(String token) {
 
         RefreshToken refreshToken =
-                refreshTokenRepository.findByToken(token)
+                refreshTokenRepository.findByToken(refreshTokenService.hashToken(token))
                         .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
         if (refreshTokenService.isExpired(refreshToken)) {
@@ -103,7 +105,8 @@ public class AuthService {
 
         return "new accessToken:  " + jwtService.generateAccessToken(
                 user.getId().toString(),
-                user.getRole().toString());
+                user.getRoles().toString(),
+                user.getUsername().toString());
     }
 
     @Transactional(readOnly = true)
