@@ -26,15 +26,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final RequestMappingHandlerMapping handlerMapping;
     private final UserRepository userRepository;
+    private final UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
             RequestMappingHandlerMapping handlerMapping,
-            UserRepository userRepository
+            UserRepository userRepository,
+            UserDetailsService userDetailsService
     ) {
         this.jwtService = jwtService;
         this.handlerMapping = handlerMapping;
         this.userRepository = userRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -43,6 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
         //implement jwtFilter for specific method
         HandlerMethod handlerMethod;
 
@@ -80,7 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwt = authHeader.substring(7);
+        String jwt = authHeader.substring(7).trim();
 
         try {
 
@@ -90,24 +94,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            Long userId = jwtService.extractUserId(jwt);
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String username = jwtService.extractUsername(jwt);
 
             UserDetails userDetails =
-                    org.springframework.security.core.userdetails.User
-                            .withUsername(user.getUsername())
-                            .password(user.getPassword())
-                            .roles(user.getRole().name())
-                            .build();
+                    userDetailsService.loadUserByUsername(username);
 
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            userDetails,
+                            userDetails, //principal (user info)
                             null,
-                            userDetails.getAuthorities()
+                            userDetails.getAuthorities() //authorities (role,...)
                     );
 
             SecurityContextHolder.getContext()
