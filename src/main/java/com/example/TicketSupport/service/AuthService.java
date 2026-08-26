@@ -119,9 +119,16 @@ public class AuthService {
 
 
     private UserResponse toResponse(User user) {
-        UserResponse registerResponse = new UserResponse();
-        registerResponse.setUsername(user.getUsername());
-        registerResponse.setRole(user.getRole());
-        return registerResponse;
+        UserResponse response = new UserResponse();
+        response.setUsername(user.getUsername());
+
+        // فقط نام نقش‌ها را برگردان (نه کل Entity)
+        response.setRole(
+                user.getRoles()
+                        .stream()
+                        .map(role -> role.getRoleName())
+                        .toList()
+        );
+        return response;
     }
 }
