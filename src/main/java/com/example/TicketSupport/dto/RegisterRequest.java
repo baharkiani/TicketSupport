@@ -1,9 +1,9 @@
 package com.example.TicketSupport.dto;
 
+import com.example.TicketSupport.entity.Role;
 import com.example.TicketSupport.entity.User;
-import com.example.TicketSupport.enums.Role;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import java.util.Set;
 
 public class RegisterRequest {
 
@@ -13,8 +13,7 @@ public class RegisterRequest {
     @NotBlank(message = "password should be filled")
     private String password;
 
-    @NotNull
-    private Role role;
+    private Set<Role> roles;
 
     public String getUsername() {
         return username;
@@ -32,18 +31,17 @@ public class RegisterRequest {
         this.password = password;
     }
 
-    public Role getRole() {
-        return role;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
     public User mapToEntity(User user) {
         user.setUsername(username);
         user.setPassword(password);
-        user.setRole(role);
         return user;
     }
 }
