@@ -5,13 +5,15 @@ import com.example.TicketSupport.dto.CreateTicketRequest;
 import com.example.TicketSupport.dto.TicketResponse;
 import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
 import com.example.TicketSupport.service.TicketService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 
 
 @RestController
@@ -19,32 +21,36 @@ import org.springframework.web.bind.annotation.*;
 public class ticketController {
 
     private final TicketService ticketService;
+
     public ticketController(TicketService ticketService) {
         this.ticketService = ticketService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @JwtRequired
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest createTicketRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(createTicketRequest));
     }
 
     @GetMapping
-    public ResponseEntity<Page<TicketResponse>> getAll(Pageable pageable){
+    public ResponseEntity<Page<TicketResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(ticketService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponse> getOne(@PathVariable Long id){
+    public ResponseEntity<TicketResponse> getOne(@PathVariable Long id) {
         return ResponseEntity.ok(ticketService.getOne(id));
     }
 
+    @JwtRequired
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/update")
-    public ResponseEntity<TicketResponse> update(@PathVariable Long id,@RequestBody UpdateTicketStatusRequest reaquest){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TicketResponse> update(@PathVariable Long id, @RequestBody UpdateTicketStatusRequest reaquest) {
         return ResponseEntity.ok(ticketService.update(id, reaquest));
     }
-
-
 
 
 }
