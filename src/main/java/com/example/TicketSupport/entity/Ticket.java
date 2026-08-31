@@ -48,6 +48,10 @@ public class Ticket {
         updatedAt = LocalDateTime.now();
     }
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
     public Long getId() {
         return id;
     }
@@ -102,5 +106,13 @@ public class Ticket {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 }

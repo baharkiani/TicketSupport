@@ -40,6 +40,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleException(InvalidRefreshTokenException ex) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+        errorResponse.setMessage(ex.getMessage());
+        errorResponse.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+
+    }
+
+    @ExceptionHandler(AccountLockException.class)
+    public ResponseEntity<ErrorResponse> handleException(AccountLockException ex) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.LOCKED.value());
+        errorResponse.setMessage(ex.getMessage());
+        errorResponse.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.LOCKED).body(errorResponse);
+    }
+
+    @ExceptionHandler(PermissionInUseException.class)
+    public ResponseEntity<ErrorResponse> handleException(PermissionInUseException ex) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.CONFLICT.value());
+        errorResponse.setMessage(ex.getMessage());
+        errorResponse.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
 
 
     @ExceptionHandler(Exception.class)

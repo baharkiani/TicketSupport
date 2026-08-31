@@ -13,7 +13,7 @@ public class RegisterRequest {
     @NotBlank(message = "password should be filled")
     private String password;
 
-    private Set<Role> roles;
+    private Set<String> roles;
 
     public String getUsername() {
         return username;
@@ -31,11 +31,11 @@ public class RegisterRequest {
         this.password = password;
     }
 
-    public Set<Role> getRoles() {
+    public Set<String> getRoles() {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
+    public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
 

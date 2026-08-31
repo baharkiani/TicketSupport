@@ -1,7 +1,6 @@
 package com.example.TicketSupport.service;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class JwtService {
@@ -22,10 +22,13 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+
     public String generateAccessToken(String id, String role, String username) {
+        String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
                 .subject(id)
+                .id(jti)
                 .claim("role", role)
                 .claim("username", username)
                 .claim("type", "access")
@@ -44,18 +47,10 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.get("username", String.class);
+        return claims.get("username").toString();
     }
-    public Long extractUserId(String token) {
 
-        Claims claims = Jwts.parser()
-                .verifyWith(generateKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
 
-        return Long.valueOf(claims.getSubject());
-    }
     public String extractRole(String token) {
 
         Claims claims = Jwts.parser()
@@ -65,6 +60,15 @@ public class JwtService {
                 .getPayload();
 
         return claims.get("role").toString();
+    }
+    public String extractToken(String authorizationHeader) {
+
+        if (authorizationHeader == null ||
+                !authorizationHeader.startsWith("Bearer ")) {
+            return null;
+        }
+
+        return authorizationHeader.substring(7);
     }
 
     public boolean validateAccessToken(String token) {
@@ -82,5 +86,13 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(generateKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

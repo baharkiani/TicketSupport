@@ -45,7 +45,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.getRoles().forEach(role -> {
             // Role به عنوان Authority
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
-
             // همه Permissionهای نقش
             role.getPermissions().forEach(permission -> {
                 authorities.add(new SimpleGrantedAuthority(permission.getName()));

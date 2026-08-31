@@ -26,9 +26,7 @@ public class ticketController {
         this.ticketService = ticketService;
     }
 
-    @SecurityRequirement(name = "bearerAuth")
-    @JwtRequired
-    @PreAuthorize("hasRole('ADMIN')")
+
     @PostMapping
     public ResponseEntity<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest createTicketRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.create(createTicketRequest));
@@ -44,10 +42,8 @@ public class ticketController {
         return ResponseEntity.ok(ticketService.getOne(id));
     }
 
-    @JwtRequired
-    @SecurityRequirement(name = "bearerAuth")
+
     @PatchMapping("/{id}/update")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TicketResponse> update(@PathVariable Long id, @RequestBody UpdateTicketStatusRequest reaquest) {
         return ResponseEntity.ok(ticketService.update(id, reaquest));
     }

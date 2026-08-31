@@ -1,25 +1,30 @@
 package com.example.TicketSupport.service;
 
-import com.example.TicketSupport.dto.LoginRequest;
-import com.example.TicketSupport.dto.LoginResponse;
-import com.example.TicketSupport.dto.RegisterRequest;
-import com.example.TicketSupport.dto.UserResponse;
+import com.example.TicketSupport.dto.*;
 import com.example.TicketSupport.entity.RefreshToken;
+import com.example.TicketSupport.entity.RevokedToken;
 import com.example.TicketSupport.entity.Role;
 import com.example.TicketSupport.entity.User;
+import com.example.TicketSupport.exception.AccountLockException;
+import com.example.TicketSupport.exception.InvalidRefreshTokenException;
 import com.example.TicketSupport.exception.UserOrPasswordNotFound;
 import com.example.TicketSupport.exception.UsernameAlreadyExistsException;
 import com.example.TicketSupport.repository.RefreshTokenRepository;
+import com.example.TicketSupport.repository.RevokedTokenRepository;
 import com.example.TicketSupport.repository.RoleRepository;
 import com.example.TicketSupport.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,8 +37,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RoleRepository roleRepository;
-
-
+    private final RevokedTokenRepository revokedTokenRepository;
 
 
     @Transactional
@@ -68,16 +72,33 @@ public class AuthService {
         return toResponse(userRepository.save(user));
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {AccountLockException.class,
+            UserOrPasswordNotFound.class})
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UserOrPasswordNotFound("username or password not correct"));
 
-        if (!verifyPassword(request.getPassword(), user.getPassword())) {
-            throw new UserOrPasswordNotFound("username or password not correct");
+        if (user.isUserLocked()) {
+            throw new AccountLockException("for 15 minutes");
         }
 
-        String accessToken = jwtService.generateAccessToken(user.getId().toString(), user.getRoles().toString(), user.getUsername().toString());
+        if (!verifyPassword(request.getPassword(), user.getPassword())) {
+            user.increseLoginAttempts();
+            if (user.getLoginAttempts() >= 3) {
+                user.lockUser();
+            }
+            userRepository.save(user);
+            throw new UserOrPasswordNotFound("Username or password not correct");
+        }
+
+        user.resetLoginAttemps();
+        userRepository.save(user);
+
+        String roles = user.getRoles()
+                .stream()
+                .map(Role::getRoleName)
+                .collect(Collectors.joining(","));
+        String accessToken = jwtService.generateAccessToken(user.getId().toString(), roles, user.getUsername().toString());
         String refreshToken = refreshTokenService.generateRefreshToken(user.getId().toString(), user);
 
 
@@ -115,6 +136,73 @@ public class AuthService {
                 .map(this::toResponse);
     }
 
+    @Transactional
+    public void updatePassword(PasswordUpdateRequest request, Authentication authentication) {
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new UserOrPasswordNotFound("username or password not found!"));
+
+        if (!verifyPassword(request.getOldPassword(), user.getPassword())) {
+            throw new UserOrPasswordNotFound("username or password not correct");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+    }
+
+    @Transactional
+    public void logout(
+            LogoutRequest request,
+            HttpServletRequest httpRequest
+    ) {
+
+        // 1. Access Token
+        Claims claims =
+                (Claims) httpRequest.getAttribute("jwtClaims");
+
+        String jti = claims.getId();
+        Instant expiryAt =
+                claims.getExpiration().toInstant();
+
+        // 2. Revoke Access Token
+        RevokedToken revokedToken =
+                new RevokedToken(jti, expiryAt);
+
+        revokedTokenRepository.save(revokedToken);
+
+        // 3. Delete Refresh Token
+        String refreshToken = request.getRefreshToken();
+
+        RefreshToken token = refreshTokenRepository
+                .findByToken(refreshTokenService.hashToken(refreshToken))
+                .orElseThrow(() ->
+                        new InvalidRefreshTokenException(
+                                "Token is not valid"
+                        ));
+
+        refreshTokenRepository.deleteByToken(token.getToken());
+    }
+
+
+    @Transactional
+    public void unlockUser(UnlockUserRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() ->
+                        new UserOrPasswordNotFound("username invalid"));
+        user.resetLoginAttemps();
+        userRepository.save(user);
+    }
+
+
+
+
+
+
+
+
+
+
 
     private boolean verifyPassword(String requestPassword, String userPassword) {
         return passwordEncoder.matches(requestPassword, userPassword);
@@ -134,4 +222,6 @@ public class AuthService {
         );
         return response;
     }
+
+
 }
