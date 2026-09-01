@@ -48,7 +48,7 @@ public class Ticket {
         updatedAt = LocalDateTime.now();
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
 

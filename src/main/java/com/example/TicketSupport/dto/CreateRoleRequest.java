@@ -8,6 +8,9 @@ public class CreateRoleRequest {
     @Size(min = 2, max = 50)
     private String roleName;
 
+    @NotBlank
+    private String department;
+
     public CreateRoleRequest(String roleName) {
         this.roleName = roleName;
     }
@@ -18,5 +21,13 @@ public class CreateRoleRequest {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 }

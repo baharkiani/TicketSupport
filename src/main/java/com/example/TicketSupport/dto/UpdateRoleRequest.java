@@ -9,6 +9,15 @@ public class UpdateRoleRequest {
     @Size(min = 2, max = 50)
     private String roleName;
 
+    private String department;
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 
     public String getRoleName() {
         return roleName;

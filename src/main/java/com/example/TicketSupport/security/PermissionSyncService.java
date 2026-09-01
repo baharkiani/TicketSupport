@@ -1,5 +1,8 @@
 package com.example.TicketSupport.security;
 
+import com.example.TicketSupport.security.PermissionDefinition;
+
+
 import com.example.TicketSupport.entity.Permission;
 import com.example.TicketSupport.entity.Role;
 import com.example.TicketSupport.repository.PermissionRepository;
@@ -32,16 +35,17 @@ public class PermissionSyncService {
 
     public void synchronize() {
 
-        List<PermissionDefinition> definitions =
-                permissionScanner.scan();
+        List<PermissionDefinition> definitions = permissionScanner.scan();
 
-        List<Role> roles =
-                roleRepository.findAll();
+        List<Role> roles = roleRepository.findAll();
 
         for (PermissionDefinition definition : definitions) {
 
-            Permission permission = new Permission();
-            permission.setName(definition.getName());
+            Permission permission = permissionRepository
+                    .findByName(definition.name())
+                    .orElseGet(Permission::new);
+
+            permission.setName(definition.name());
 
             permissionRepository.save(permission);
 

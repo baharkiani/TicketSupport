@@ -40,7 +40,7 @@ public class User {
 
     private LocalDateTime lockedUntil;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;
 

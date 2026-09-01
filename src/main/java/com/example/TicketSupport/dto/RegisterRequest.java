@@ -13,6 +13,17 @@ public class RegisterRequest {
     @NotBlank(message = "password should be filled")
     private String password;
 
+    @NotBlank
+    private String department;
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
     private Set<String> roles;
 
     public String getUsername() {

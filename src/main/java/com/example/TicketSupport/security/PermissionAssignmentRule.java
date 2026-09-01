@@ -10,16 +10,13 @@ public class PermissionAssignmentRule {
             PermissionDefinition permission
     ) {
 
-        String roleName =
-                role.getRoleName().toUpperCase();
+        String roleName = role.getRoleName().toUpperCase();
 
-        String action =
-                extractAction(permission.getName());
+        String action = extractAction(permission.name());
 
         return switch (roleName) {
 
-            case "USER" -> action.equals("READ")
-                    || action.equals("CREATE");
+            case "USER" -> action.equals("READ") || action.equals("CREATE");
 
             case "AGENT" -> action.equals("READ")
                     || action.equals("CREATE")
@@ -33,8 +30,7 @@ public class PermissionAssignmentRule {
 
     private String extractAction(String permissionName) {
 
-        int index =
-                permissionName.lastIndexOf("_");
+        int index = permissionName.lastIndexOf("_");
 
         return permissionName
                 .substring(index + 1)

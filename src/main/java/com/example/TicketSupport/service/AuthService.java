@@ -1,18 +1,12 @@
 package com.example.TicketSupport.service;
 
 import com.example.TicketSupport.dto.*;
-import com.example.TicketSupport.entity.RefreshToken;
-import com.example.TicketSupport.entity.RevokedToken;
-import com.example.TicketSupport.entity.Role;
-import com.example.TicketSupport.entity.User;
+import com.example.TicketSupport.entity.*;
 import com.example.TicketSupport.exception.AccountLockException;
 import com.example.TicketSupport.exception.InvalidRefreshTokenException;
 import com.example.TicketSupport.exception.UserOrPasswordNotFound;
 import com.example.TicketSupport.exception.UsernameAlreadyExistsException;
-import com.example.TicketSupport.repository.RefreshTokenRepository;
-import com.example.TicketSupport.repository.RevokedTokenRepository;
-import com.example.TicketSupport.repository.RoleRepository;
-import com.example.TicketSupport.repository.UserRepository;
+import com.example.TicketSupport.repository.*;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,10 +32,12 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RoleRepository roleRepository;
     private final RevokedTokenRepository revokedTokenRepository;
+    private final DepartmentRepository  departmentRepository;
 
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
+
         User user = new User();
         request.mapToEntity(user);
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
@@ -67,8 +63,15 @@ public class AuthService {
                     .collect(Collectors.toSet());
         }
 
+
+        Department department = departmentRepository
+                .findByName(request.getDepartment())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Department not found"));
+
         user.setRoles(roles);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setDepartment(department);
         return toResponse(userRepository.save(user));
     }
 
@@ -98,7 +101,7 @@ public class AuthService {
                 .stream()
                 .map(Role::getRoleName)
                 .collect(Collectors.joining(","));
-        String accessToken = jwtService.generateAccessToken(user.getId().toString(), roles, user.getUsername().toString());
+        String accessToken = jwtService.generateAccessToken(user.getId(), roles, user.getUsername().toString());
         String refreshToken = refreshTokenService.generateRefreshToken(user.getId().toString(), user);
 
 
@@ -125,7 +128,7 @@ public class AuthService {
         User user = refreshToken.getUser();
 
         return "new accessToken:  " + jwtService.generateAccessToken(
-                user.getId().toString(),
+                user.getId(),
                 user.getRoles().toString(),
                 user.getUsername().toString());
     }

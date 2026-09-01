@@ -1,9 +1,10 @@
 package com.example.TicketSupport.config;
 
 import com.example.TicketSupport.filter.JwtAuthenticationFilter;
+import com.example.TicketSupport.security.CachedBodyFilter;
+import com.example.TicketSupport.security.CustomAuthorizationManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,18 +13,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CachedBodyFilter cachedBodyFilter;
+    private final CustomAuthorizationManager customAuthorizationManager;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            CachedBodyFilter cachedBodyFilter,
+            CustomAuthorizationManager customAuthorizationManager
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.cachedBodyFilter = cachedBodyFilter;
+        this.customAuthorizationManager = customAuthorizationManager;
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -31,31 +37,60 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
 
-        return http
+        http
                 .csrf(csrf -> csrf.disable())
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+
+                /*
+                 * CachedBodyFilter
+                 *
+                 * قبل از JwtAuthenticationFilter اجرا می‌شود.
+                 */
+                .addFilterBefore(
+                        cachedBodyFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 )
+
+                /*
+                 * JwtAuthenticationFilter
+                 *
+                 * بعد از CachedBodyFilter و قبل از
+                 * UsernamePasswordAuthenticationFilter اجرا می‌شود.
+                 */
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 )
-                .build();
 
+                .authorizeHttpRequests(auth -> auth
 
+                        .requestMatchers(
+                                "/api/users/login",
+                                "/api/users/register",
+                                "/api/users/refresh"
+                        )
+                        .permitAll()
+
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        )
+                        .permitAll()
+
+                        .anyRequest()
+                        .access(customAuthorizationManager)
+                );
+
+        return http.build();
     }
-
-
 }
-

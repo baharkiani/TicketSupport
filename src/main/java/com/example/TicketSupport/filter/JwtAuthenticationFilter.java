@@ -80,13 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String jwt = jwtService.extractToken(authHeader);
 
-            request.setAttribute("jwtClaims", jwtService.extractClaims(jwt));
-
             if (jwt == null) {
-                response.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "Authorization header is missing or invalid"
-                );
+                filterChain.doFilter(request, response);
                 return;
             }
 

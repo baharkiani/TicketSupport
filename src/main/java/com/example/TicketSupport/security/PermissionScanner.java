@@ -43,26 +43,41 @@ public class PermissionScanner {
             return List.of();
         }
 
-        Set<String> paths =
-                mapping.getPathPatternsCondition()
-                        .getPatternValues();
+        Set<String> paths = mapping.getPathPatternsCondition().getPatternValues();
+
+        System.out.println("=== SCANNER ===");
+        System.out.println("Controller: " +
+                handlerMethod.getBeanType().getSimpleName());
+
+        System.out.println("Handler: " +
+                handlerMethod.getMethod().getName());
+
+        System.out.println("Methods: " + methods);
+        System.out.println("Paths: " + paths);
 
         List<PermissionDefinition> definitions = new ArrayList<>();
 
         for (RequestMethod method : methods) {
 
-            String permissionName =
-                    generatePermissionName(handlerMethod, method);
+            String action = switch (method) {
+                case GET -> "READ";
+                case POST -> "CREATE";
+                case PUT, PATCH -> "UPDATE";
+                case DELETE -> "DELETE";
+                default -> method.name();
+            };
+
+            String permissionName = generatePermissionName(handlerMethod, action);
 
             for (String path : paths) {
-
                 definitions.add(
                         new PermissionDefinition(
                                 permissionName,
                                 path,
                                 method,
                                 handlerMethod.getBeanType().getSimpleName(),
-                                handlerMethod.getMethod().getName()
+                                handlerMethod.getMethod().getName(),
+                                action
                         )
                 );
             }
@@ -73,7 +88,7 @@ public class PermissionScanner {
 
     private String generatePermissionName(
             HandlerMethod handlerMethod,
-            RequestMethod method
+            String action
     ) {
 
         String resource = handlerMethod
@@ -82,13 +97,6 @@ public class PermissionScanner {
                 .replace("Controller", "")
                 .toUpperCase();
 
-        String action = switch (method) {
-            case GET -> "READ";
-            case POST -> "CREATE";
-            case PUT, PATCH -> "UPDATE";
-            case DELETE -> "DELETE";
-            default -> method.name();
-        };
 
         return resource + "_" + action;
     }

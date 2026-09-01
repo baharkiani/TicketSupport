@@ -23,11 +23,11 @@ public class JwtService {
     }
 
 
-    public String generateAccessToken(String id, String role, String username) {
+    public String generateAccessToken(Long id, String role, String username) {
         String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
-                .subject(id)
+                .subject(String.valueOf(id))
                 .id(jti)
                 .claim("role", role)
                 .claim("username", username)

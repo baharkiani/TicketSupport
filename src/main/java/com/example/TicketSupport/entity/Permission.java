@@ -30,5 +30,4 @@ public class Permission {
         this.name = name;
     }
 
-
 }

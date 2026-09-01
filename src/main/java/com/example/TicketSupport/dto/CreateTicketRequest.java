@@ -16,6 +16,8 @@ public class CreateTicketRequest {
 
 
 
+
+
     public String getTitle() {
         return title;
     }
@@ -31,6 +33,8 @@ public class CreateTicketRequest {
     public void setDescription(String description) {
         this.description = description;
     }
+
+
 
     public void mapToEntity(Ticket ticket) {
         ticket.setTitle(getTitle());
