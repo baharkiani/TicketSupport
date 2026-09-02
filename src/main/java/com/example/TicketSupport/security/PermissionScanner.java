@@ -16,6 +16,7 @@ public class PermissionScanner {
     private final RequestMappingHandlerMapping handlerMapping;
 
     public PermissionScanner(RequestMappingHandlerMapping handlerMapping) {
+
         this.handlerMapping = handlerMapping;
     }
 
@@ -45,15 +46,7 @@ public class PermissionScanner {
 
         Set<String> paths = mapping.getPathPatternsCondition().getPatternValues();
 
-        System.out.println("=== SCANNER ===");
-        System.out.println("Controller: " +
-                handlerMethod.getBeanType().getSimpleName());
 
-        System.out.println("Handler: " +
-                handlerMethod.getMethod().getName());
-
-        System.out.println("Methods: " + methods);
-        System.out.println("Paths: " + paths);
 
         List<PermissionDefinition> definitions = new ArrayList<>();
 

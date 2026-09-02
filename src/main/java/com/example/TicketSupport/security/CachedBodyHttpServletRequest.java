@@ -12,25 +12,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-public class CachedBodyHttpServletRequest
-        extends HttpServletRequestWrapper {
+public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
 
     private final byte[] cachedBody;
 
     public CachedBodyHttpServletRequest(
             HttpServletRequest request
     ) throws IOException {
-
         super(request);
-
         cachedBody = request.getInputStream().readAllBytes();
     }
 
     @Override
     public ServletInputStream getInputStream() {
 
-        ByteArrayInputStream inputStream =
-                new ByteArrayInputStream(cachedBody);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(cachedBody);
 
         return new ServletInputStream() {
 
@@ -61,10 +57,6 @@ public class CachedBodyHttpServletRequest
     public BufferedReader getReader() {
 
         return new BufferedReader(
-                new InputStreamReader(
-                        getInputStream(),
-                        StandardCharsets.UTF_8
-                )
-        );
+                new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
     }
 }

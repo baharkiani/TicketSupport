@@ -1,22 +1,22 @@
 package com.example.TicketSupport.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 public class UpdateRoleRequest {
 
-    @NotBlank(message = "Role name is required")
     @Size(min = 2, max = 50)
     private String roleName;
 
-    private String department;
+    private List<String> rolePermissions;
 
-    public String getDepartment() {
-        return department;
+    public List<String> getRolePermissions() {
+        return rolePermissions;
     }
 
-    public void setDepartment(String department) {
-        this.department = department;
+    public void setRolePermissions(List<String> rolePermissions) {
+        this.rolePermissions = rolePermissions;
     }
 
     public String getRoleName() {

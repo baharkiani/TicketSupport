@@ -7,8 +7,10 @@ import com.example.TicketSupport.dto.UpdateTicketStatusRequest;
 import com.example.TicketSupport.entity.Ticket;
 import com.example.TicketSupport.entity.User;
 import com.example.TicketSupport.exception.TicketNotFoundException;
+import com.example.TicketSupport.exception.UserOrPasswordNotFound;
 import com.example.TicketSupport.repository.TicketRepository;
 import com.example.TicketSupport.repository.UserRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,9 +46,12 @@ public class TicketService  {
     }
 
     @Transactional(readOnly = true)
-    public Page<TicketResponse> getAll(Pageable pageable, Long departmentId) {
-
-        System.out.println("department id  "+departmentId);
+    public Page<TicketResponse> getAll(Pageable pageable, Authentication authentication ) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () -> new UserOrPasswordNotFound("useranme not found")
+        );
+        Long departmentId = user.getDepartment().getId();
 
         Page<Ticket> tickets = ticketRepository.findByDepartmentId(departmentId, pageable);
 

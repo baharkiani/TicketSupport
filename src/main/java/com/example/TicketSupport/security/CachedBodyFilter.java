@@ -19,12 +19,8 @@ public class CachedBodyFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        CachedBodyHttpServletRequest cachedRequest =
-                new CachedBodyHttpServletRequest(request);
+        CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(request);
 
-        filterChain.doFilter(
-                cachedRequest,
-                response
-        );
+        filterChain.doFilter(cachedRequest, response);
     }
 }

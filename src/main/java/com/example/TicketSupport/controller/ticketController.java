@@ -47,13 +47,7 @@ public class ticketController {
     @GetMapping
     public ResponseEntity<Page<TicketResponse>> getAll(Pageable pageable, Authentication authentication
     ) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsername(username).orElseThrow(
-                () -> new UserOrPasswordNotFound("useranme not found")
-        );
-        Long departmentId = user.getDepartment().getId();
-
-        return ResponseEntity.ok(ticketService.getAll(pageable, departmentId));
+        return ResponseEntity.ok(ticketService.getAll(pageable, authentication));
     }
 
     @GetMapping("/{id}")

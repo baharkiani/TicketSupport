@@ -23,9 +23,7 @@ public class DepartmentService {
     public Department create(DepartmentRequest request) {
 
         if (departmentRepository.existsByName(request.getName())) {
-            throw new IllegalArgumentException(
-                    "Department already exists"
-            );
+            throw new IllegalArgumentException("Department already exists");
         }
 
         Department department = new Department();
@@ -43,16 +41,10 @@ public class DepartmentService {
     public Department getOne(Long id) {
 
         return departmentRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Department not found"
-                        ));
+                .orElseThrow(() -> new IllegalArgumentException("Department not found"));
     }
 
-    public Department update(
-            Long id,
-            DepartmentRequest request
-    ) {
+    public Department update(Long id, DepartmentRequest request) {
 
         Department department = getOne(id);
 

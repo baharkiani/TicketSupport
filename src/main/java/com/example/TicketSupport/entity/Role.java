@@ -24,6 +24,8 @@ public class Role {
     )
     private Set<Permission> permissions = new HashSet<>();
 
+    @ManyToMany(mappedBy = "roles")
+    private Set<User> users = new HashSet<>();
 
 
     public Long getId() {
@@ -49,5 +51,13 @@ public class Role {
 
     public void setPermissions(Set<Permission> permissions) {
         this.permissions = permissions;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 }
